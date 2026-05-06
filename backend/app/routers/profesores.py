@@ -46,3 +46,18 @@ def eliminar_profesor(profesor_id: int, db: Session = Depends(get_db)):
     db.delete(profesor)
     db.commit()
     return {"mensaje": "Profesor eliminado"}
+
+from fastapi import UploadFile, File
+from app.services.csv_service import importar_alumnos_csv, importar_empresas_csv
+
+@router.post("/importar-alumnos")
+async def importar_alumnos(ciclo_id: int, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    contenido = await archivo.read()
+    resultado = importar_alumnos_csv(contenido, ciclo_id, db)
+    return resultado
+
+@router.post("/importar-empresas")
+async def importar_empresas(archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    contenido = await archivo.read()
+    resultado = importar_empresas_csv(contenido, db)
+    return resultado
