@@ -4,6 +4,8 @@ from app.models import *
 from app.routers import auth, admin
 from app.routers import auth, admin, profesores
 from app.routers import auth, admin, profesores, empresas
+from app.routers import auth, admin, profesores, empresas, alumnos
+
 
 
 Base.metadata.create_all(bind=engine)
@@ -18,6 +20,8 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(profesores.router, prefix="/api/profesores", tags=["Profesores"])
 app.include_router(empresas.router, prefix="/api/empresas", tags=["Empresas"])
+app.include_router(alumnos.router, prefix="/api/alumnos", tags=["Alumnos"])
+
 
 
 
