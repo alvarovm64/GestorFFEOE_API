@@ -82,3 +82,27 @@ def dashboard_alumno(alumno_id: int, db: Session = Depends(get_db)):
         "empresa_id": plaza.empresa_id if plaza else None,
         "tutor_laboral_id": asignacion.tutor_laboral_id
     }
+
+from fastapi import UploadFile, File
+import shutil
+import os
+
+@router.post("/{alumno_id}/cv")
+async def subir_cv(alumno_id: int, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    alumno = db.query(Alumno).filter(Alumno.id == alumno_id).first()
+    if not alumno:
+        raise HTTPException(status_code=404, detail="Alumno no encontrado")
+    if not archivo.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
+    
+    carpeta = "uploads/cvs"
+    os.makedirs(carpeta, exist_ok=True)
+    ruta = f"{carpeta}/alumno_{alumno_id}.pdf"
+    
+    with open(ruta, "wb") as buffer:
+        shutil.copyfileobj(archivo.file, buffer)
+    
+    alumno.cv_pdf_path = ruta
+    db.commit()
+    
+    return {"mensaje": "CV subido correctamente", "ruta": ruta}
