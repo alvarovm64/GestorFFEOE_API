@@ -4,3 +4,6 @@ from app.models.empresa import Empresa
 from app.models.alumno import Alumno
 from app.models.profesor import Profesor
 from app.models.contacto import ContactoEmpresa
+from app.models.tutor_laboral import TutorLaboral
+from app.models.plaza import Plaza
+from app.models.asignacion import Asignacion
