@@ -126,3 +126,74 @@ def test_eliminar_ciclo_inexistente():
     """Eliminar un ciclo que no existe debe devolver 404"""
     respuesta = requests.delete(f"{BASE_URL}/api/admin/ciclos/99999")
     assert respuesta.status_code == 404
+
+# ────────────────────────────────────────
+# EMPRESAS
+# ────────────────────────────────────────
+
+def test_listar_empresas():
+    """GET /api/empresas/ debe devolver una lista"""
+    respuesta = requests.get(f"{BASE_URL}/api/empresas/")
+    assert respuesta.status_code == 200
+    assert isinstance(respuesta.json(), list)
+
+def test_crear_empresa_correcta():
+    """Una empresa con datos válidos debe crearse correctamente"""
+    respuesta = requests.post(f"{BASE_URL}/api/empresas/", json={
+        "nombre": "Empresa Test S.L.",
+        "direccion": "Calle Test 1",
+        "web": "https://www.test.com",
+        "email": "info@test.com",
+        "telefono": "911111111",
+        "persona_contacto": "Juan Test"
+    })
+    assert respuesta.status_code == 200
+    datos = respuesta.json()
+    assert datos["nombre"] == "Empresa Test S.L."
+    assert "id" in datos
+
+def test_crear_empresa_sin_nombre():
+    """Una empresa sin nombre debe devolver 422"""
+    respuesta = requests.post(f"{BASE_URL}/api/empresas/", json={
+        "direccion": "Calle Test 1",
+        "email": "info@test.com"
+    })
+    assert respuesta.status_code == 422
+
+def test_crear_empresa_campos_opcionales_vacios():
+    """Una empresa solo con nombre debe crearse correctamente"""
+    respuesta = requests.post(f"{BASE_URL}/api/empresas/", json={
+        "nombre": "Empresa Minima S.L."
+    })
+    assert respuesta.status_code == 200
+    assert respuesta.json()["nombre"] == "Empresa Minima S.L."
+
+def test_listar_contactos():
+    """GET /api/empresas/contactos debe devolver una lista"""
+    respuesta = requests.get(f"{BASE_URL}/api/empresas/contactos")
+    assert respuesta.status_code == 200
+    assert isinstance(respuesta.json(), list)
+
+def test_registrar_contacto_empresa_inexistente():
+    """Registrar contacto con empresa inexistente debe devolver 404"""
+    respuesta = requests.post(f"{BASE_URL}/api/empresas/contactos", json={
+        "profesor_id": 1,
+        "empresa_id": 99999,
+        "fecha_hora": "2024-05-01T10:00:00",
+        "notas": "Contacto de prueba"
+    })
+    assert respuesta.status_code == 404
+
+def test_registrar_contacto_profesor_inexistente():
+    """Registrar contacto con profesor inexistente debe devolver 404"""
+    empresa = requests.post(f"{BASE_URL}/api/empresas/", json={
+        "nombre": "Empresa Contacto Test"
+    }).json()
+
+    respuesta = requests.post(f"{BASE_URL}/api/empresas/contactos", json={
+        "profesor_id": 99999,
+        "empresa_id": empresa["id"],
+        "fecha_hora": "2024-05-01T10:00:00",
+        "notas": "Contacto de prueba"
+    })
+    assert respuesta.status_code == 404
