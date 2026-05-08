@@ -287,3 +287,63 @@ def test_subir_archivo_no_pdf():
         files={"archivo": ("cv.docx", b"contenido falso", "application/docx")}
     )
     assert respuesta.status_code in [400, 404]
+
+# ────────────────────────────────────────
+# SEGURIDAD
+# ────────────────────────────────────────
+
+def test_rutas_admin_no_protegidas():
+    """
+    PROBLEMA DE SEGURIDAD: las rutas de admin no requieren JWT.
+    Cualquiera puede crear ciclos sin autenticarse.
+    """
+    respuesta = requests.post(f"{BASE_URL}/api/admin/ciclos", json={
+        "nombre": "Ciclo Sin Auth",
+        "anio_inicio": 2024,
+        "anio_fin": 2026
+    })
+    assert respuesta.status_code == 200, \
+        "🔴 SEGURIDAD: /api/admin/ciclos no requiere autenticación"
+
+def test_rutas_empresas_no_protegidas():
+    """
+    PROBLEMA DE SEGURIDAD: cualquiera puede crear empresas sin autenticarse.
+    """
+    respuesta = requests.post(f"{BASE_URL}/api/empresas/", json={
+        "nombre": "Empresa Sin Auth"
+    })
+    assert respuesta.status_code == 200, \
+        "🔴 SEGURIDAD: /api/empresas/ no requiere autenticación"
+
+def test_rutas_plazas_no_protegidas():
+    """
+    PROBLEMA DE SEGURIDAD: cualquiera puede crear plazas sin autenticarse.
+    """
+    empresas = requests.get(f"{BASE_URL}/api/empresas/").json()
+    ciclos = requests.get(f"{BASE_URL}/api/admin/ciclos").json()
+
+    if empresas and ciclos:
+        respuesta = requests.post(f"{BASE_URL}/api/alumnos/plazas", json={
+            "empresa_id": empresas[0]["id"],
+            "ciclo_id": ciclos[0]["id"],
+            "total_plazas": 1
+        })
+        assert respuesta.status_code == 200, \
+            "🔴 SEGURIDAD: /api/alumnos/plazas no requiere autenticación"
+
+def test_token_invalido_no_existe_verificacion():
+    """
+    PROBLEMA DE SEGURIDAD: el backend no verifica el JWT en las rutas.
+    Un token inventado no debería permitir acceso.
+    """
+    respuesta = requests.post(
+        f"{BASE_URL}/api/admin/ciclos",
+        json={
+            "nombre": "Ciclo Token Falso",
+            "anio_inicio": 2024,
+            "anio_fin": 2026
+        },
+        headers={"Authorization": "Bearer token_inventado_que_no_vale"}
+    )
+    assert respuesta.status_code == 200, \
+        "🔴 SEGURIDAD: el token JWT no se verifica en ninguna ruta"
