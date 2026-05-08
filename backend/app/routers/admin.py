@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ciclo import Ciclo
+from app.dependencies import solo_admin
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -21,7 +22,7 @@ class CicloResponse(BaseModel):
         from_attributes = True
 
 @router.post("/ciclos", response_model=CicloResponse)
-def crear_ciclo(ciclo: CicloCreate, db: Session = Depends(get_db)):
+def crear_ciclo(ciclo: CicloCreate, db: Session = Depends(get_db), admin=Depends(solo_admin)):
     nuevo = Ciclo(**ciclo.model_dump())
     db.add(nuevo)
     db.commit()
@@ -29,11 +30,11 @@ def crear_ciclo(ciclo: CicloCreate, db: Session = Depends(get_db)):
     return nuevo
 
 @router.get("/ciclos", response_model=list[CicloResponse])
-def listar_ciclos(db: Session = Depends(get_db)):
+def listar_ciclos(db: Session = Depends(get_db), admin=Depends(solo_admin)):
     return db.query(Ciclo).all()
 
 @router.delete("/ciclos/{ciclo_id}")
-def eliminar_ciclo(ciclo_id: int, db: Session = Depends(get_db)):
+def eliminar_ciclo(ciclo_id: int, db: Session = Depends(get_db), admin=Depends(solo_admin)):
     ciclo = db.query(Ciclo).filter(Ciclo.id == ciclo_id).first()
     if not ciclo:
         raise HTTPException(status_code=404, detail="Ciclo no encontrado")
