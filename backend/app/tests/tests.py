@@ -65,3 +65,64 @@ def test_login_devuelve_nombre_y_rol():
     datos = respuesta.json()
     assert "nombre" in datos
     assert "rol" in datos
+
+# ────────────────────────────────────────
+# CICLOS
+# ────────────────────────────────────────
+
+def test_listar_ciclos():
+    """GET /api/admin/ciclos debe devolver una lista"""
+    respuesta = requests.get(f"{BASE_URL}/api/admin/ciclos")
+    assert respuesta.status_code == 200
+    assert isinstance(respuesta.json(), list)
+
+def test_crear_ciclo_correcto():
+    """Un ciclo con datos válidos debe crearse correctamente"""
+    ciclos = requests.get(f"{BASE_URL}/api/admin/ciclos").json()
+    for ciclo in ciclos:
+        if ciclo["nombre"] == "Test Ciclo":
+            requests.delete(f"{BASE_URL}/api/admin/ciclos/{ciclo['id']}")
+
+    respuesta = requests.post(f"{BASE_URL}/api/admin/ciclos", json={
+        "nombre": "Test Ciclo",
+        "anio_inicio": 2024,
+        "anio_fin": 2026
+    })
+    assert respuesta.status_code == 200
+    datos = respuesta.json()
+    assert datos["nombre"] == "Test Ciclo"
+    assert datos["anio_inicio"] == 2024
+    assert datos["anio_fin"] == 2026
+
+def test_crear_ciclo_sin_nombre():
+    """Un ciclo sin nombre debe devolver 422"""
+    respuesta = requests.post(f"{BASE_URL}/api/admin/ciclos", json={
+        "anio_inicio": 2024,
+        "anio_fin": 2026
+    })
+    assert respuesta.status_code == 422
+
+def test_crear_ciclo_sin_anio_inicio():
+    """Un ciclo sin año de inicio debe devolver 422"""
+    respuesta = requests.post(f"{BASE_URL}/api/admin/ciclos", json={
+        "nombre": "Ciclo Sin Inicio",
+        "anio_fin": 2026
+    })
+    assert respuesta.status_code == 422
+
+def test_eliminar_ciclo_correcto():
+    """Un ciclo existente debe eliminarse correctamente"""
+    ciclo = requests.post(f"{BASE_URL}/api/admin/ciclos", json={
+        "nombre": "Ciclo A Eliminar",
+        "anio_inicio": 2024,
+        "anio_fin": 2026
+    }).json()
+
+    respuesta = requests.delete(f"{BASE_URL}/api/admin/ciclos/{ciclo['id']}")
+    assert respuesta.status_code == 200
+    assert respuesta.json()["mensaje"] == "Ciclo eliminado"
+
+def test_eliminar_ciclo_inexistente():
+    """Eliminar un ciclo que no existe debe devolver 404"""
+    respuesta = requests.delete(f"{BASE_URL}/api/admin/ciclos/99999")
+    assert respuesta.status_code == 404
