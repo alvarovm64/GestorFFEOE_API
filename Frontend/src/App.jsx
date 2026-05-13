@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Login from './pages/login';
-import AdminPanel from './pages/AdminPanel';
-import ProfesorPanel from './pages/ProfesorPanel';
-import AlumnoPanel from './pages/AlumnoPanel';
+import Login from './components/login';
+import AdminPanel from './components/AdminPanel';
+import ProfesorPanel from './components/ProfesorPanel';
+import AlumnoPanel from './components/AlumnoPanel';
 
 export default function App() {
   const [rol, setRol] = useState(localStorage.getItem('rol') || null);
