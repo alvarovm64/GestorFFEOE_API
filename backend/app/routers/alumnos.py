@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.plaza import Plaza
 from app.models.asignacion import Asignacion
 from app.models.alumno import Alumno
-from pydantic import BaseModel
 from app.dependencies import solo_profesor
-
+from pydantic import BaseModel
+import shutil
+import os
 
 router = APIRouter()
 
@@ -39,32 +40,6 @@ class AsignacionResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-from fastapi import UploadFile, File
-import shutil
-import os
-
-@router.post("/{alumno_id}/cv")
-async def subir_cv(alumno_id: int, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
-    alumno = db.query(Alumno).filter(Alumno.id == alumno_id).first()
-    if not alumno:
-        raise HTTPException(status_code=404, detail="Alumno no encontrado")
-    if not archivo.filename.endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
-    
-    carpeta = "uploads/cvs"
-    os.makedirs(carpeta, exist_ok=True)
-    ruta = f"{carpeta}/alumno_{alumno_id}.pdf"
-    
-    with open(ruta, "wb") as buffer:
-        shutil.copyfileobj(archivo.file, buffer)
-    
-    alumno.cv_pdf_path = ruta
-    db.commit()
-    
-    return {"mensaje": "CV subido correctamente", "ruta": ruta}
-
-    from app.dependencies import solo_profesor
 
 @router.post("/plazas", response_model=PlazaResponse)
 def crear_plaza(plaza: PlazaCreate, db: Session = Depends(get_db), profesor=Depends(solo_profesor)):
@@ -110,3 +85,19 @@ def dashboard_alumno(alumno_id: int, db: Session = Depends(get_db)):
         "empresa_id": plaza.empresa_id if plaza else None,
         "tutor_laboral_id": asignacion.tutor_laboral_id
     }
+
+@router.post("/{alumno_id}/cv")
+async def subir_cv(alumno_id: int, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    alumno = db.query(Alumno).filter(Alumno.id == alumno_id).first()
+    if not alumno:
+        raise HTTPException(status_code=404, detail="Alumno no encontrado")
+    if not archivo.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
+    carpeta = "uploads/cvs"
+    os.makedirs(carpeta, exist_ok=True)
+    ruta = f"{carpeta}/alumno_{alumno_id}.pdf"
+    with open(ruta, "wb") as buffer:
+        shutil.copyfileobj(archivo.file, buffer)
+    alumno.cv_pdf_path = ruta
+    db.commit()
+    return {"mensaje": "CV subido correctamente", "ruta": ruta}
