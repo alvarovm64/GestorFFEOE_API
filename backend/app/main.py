@@ -5,7 +5,15 @@ from app.routers import auth, admin
 from app.routers import auth, admin, profesores
 from app.routers import auth, admin, profesores, empresas
 from app.routers import auth, admin, profesores, empresas, alumnos
+from fastapi.middleware.cors import CORSMiddleware
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 Base.metadata.create_all(bind=engine)

@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'http://alvarovm64:8000';
  
 // Recupera el token JWT que guardamos al hacer login
 function getToken() {

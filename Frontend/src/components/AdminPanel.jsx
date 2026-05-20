@@ -77,7 +77,7 @@ function SeccionCiclos() {
   }
  
   async function handleBorrar(id) {
-    if (!confirm('¿Seguro que quieres borrar este ciclo?')) return;
+    if (!window.confirm('¿Seguro que quieres borrar este ciclo?')) return;
     try {
       await deleteCiclo(id);
       showAlert('Ciclo eliminado', 'success');
@@ -172,7 +172,7 @@ function SeccionProfesores() {
   }
  
   async function handleBorrar(id) {
-    if (!confirm('¿Seguro?')) return;
+    if (!window.confirm('¿Seguro?')) return;
     try {
       await deleteProfesor(id);
       showAlert('Profesor eliminado', 'success');
