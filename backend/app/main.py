@@ -5,7 +5,6 @@ from app.models import *
 from app.routers import auth, admin, profesores, empresas, alumnos
 from fastapi.middleware.cors import CORSMiddleware
 
- HEAD
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
