@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.usuario import Usuario
-from app.core.security import verify_password, create_access_token
 from pydantic import BaseModel
+from app.core.security import verify_password, create_access_token, hash_password
 
 router = APIRouter()
 
@@ -32,3 +32,48 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "rol": usuario.rol,
         "nombre": usuario.nombre
     }
+
+    from app.core.security import hash_password
+from datetime import date
+
+class RegisterRequest(BaseModel):
+    nombre: str
+    apellidos: str | None = None
+    email: str
+    password: str
+    rol: str = "alumno"
+    telefono: str | None = None
+    dni: str | None = None
+    fecha_nacimiento: date | None = None
+    direccion: str | None = None
+
+class RegisterResponse(BaseModel):
+    id: int
+    nombre: str
+    apellidos: str | None = None
+    email: str
+    rol: str
+
+    class Config:
+        from_attributes = True
+
+@router.post("/register", response_model=RegisterResponse)
+def register(data: RegisterRequest, db: Session = Depends(get_db)):
+    usuario_existente = db.query(Usuario).filter(Usuario.email == data.email).first()
+    if usuario_existente:
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
+    nuevo = Usuario(
+        nombre=data.nombre,
+        apellidos=data.apellidos,
+        email=data.email,
+        password_hash=hash_password(data.password),
+        rol=data.rol,
+        telefono=data.telefono,
+        dni=data.dni,
+        fecha_nacimiento=data.fecha_nacimiento,
+        direccion=data.direccion
+    )
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo

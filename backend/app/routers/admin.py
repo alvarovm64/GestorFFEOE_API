@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ciclo import Ciclo
-from app.dependencies import solo_admin
+from app.dependencies import solo_admin, get_usuario_actual
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -30,7 +30,7 @@ def crear_ciclo(ciclo: CicloCreate, db: Session = Depends(get_db), admin=Depends
     return nuevo
 
 @router.get("/ciclos", response_model=list[CicloResponse])
-def listar_ciclos(db: Session = Depends(get_db), admin=Depends(solo_admin)):
+def listar_ciclos(db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
     return db.query(Ciclo).all()
 
 @router.delete("/ciclos/{ciclo_id}")
