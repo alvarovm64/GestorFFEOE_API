@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.profesor import Profesor
 from app.models.usuario import Usuario
 from app.models.ciclo import Ciclo
+from app.services.csv_service import importar_alumnos_csv, importar_empresas_csv
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -16,6 +17,17 @@ class ProfesorResponse(BaseModel):
     id: int
     usuario_id: int
     ciclo_id: int
+
+    class Config:
+        from_attributes = True
+
+class ProfesorDetalleResponse(BaseModel):
+    id: int
+    usuario_id: int
+    ciclo_id: int
+    nombre: str
+    apellidos: str | None = None
+    email: str
 
     class Config:
         from_attributes = True
@@ -34,9 +46,21 @@ def crear_profesor(profesor: ProfesorCreate, db: Session = Depends(get_db)):
     db.refresh(nuevo)
     return nuevo
 
-@router.get("/", response_model=list[ProfesorResponse])
+@router.get("/", response_model=list[ProfesorDetalleResponse])
 def listar_profesores(db: Session = Depends(get_db)):
-    return db.query(Profesor).all()
+    profesores = db.query(Profesor).all()
+    resultado = []
+    for p in profesores:
+        usuario = db.query(Usuario).filter(Usuario.id == p.usuario_id).first()
+        resultado.append(ProfesorDetalleResponse(
+            id=p.id,
+            usuario_id=p.usuario_id,
+            ciclo_id=p.ciclo_id,
+            nombre=usuario.nombre if usuario else "",
+            apellidos=usuario.apellidos if usuario else None,
+            email=usuario.email if usuario else ""
+        ))
+    return resultado
 
 @router.delete("/{profesor_id}")
 def eliminar_profesor(profesor_id: int, db: Session = Depends(get_db)):
@@ -46,9 +70,6 @@ def eliminar_profesor(profesor_id: int, db: Session = Depends(get_db)):
     db.delete(profesor)
     db.commit()
     return {"mensaje": "Profesor eliminado"}
-
-from fastapi import UploadFile, File
-from app.services.csv_service import importar_alumnos_csv, importar_empresas_csv
 
 @router.post("/importar-alumnos")
 async def importar_alumnos(ciclo_id: int, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
