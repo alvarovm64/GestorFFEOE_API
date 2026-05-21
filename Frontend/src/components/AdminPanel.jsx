@@ -13,6 +13,17 @@ import {
   getProfesores, createProfesor, deleteProfesor,
 } from '../api/client';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://gestorffeoeapi-production.up.railway.app';
+
+async function getUsuariosProfesores() {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_URL}/api/admin/usuarios/profesores`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Error al cargar usuarios');
+  return res.json();
+}
+
 const NAV_ITEMS = [
   { id: 'ciclos',     label: 'Ciclos',     icon: '📚' },
   { id: 'profesores', label: 'Profesores', icon: '👥' },
@@ -142,15 +153,17 @@ function SeccionCiclos() {
 // ─── SECCIÓN PROFESORES ──────────────────────────────────────
 
 function SeccionProfesores() {
-  const [profesores, setProfesores] = useState([]);
-  const [ciclos, setCiclos]         = useState([]);
-  const [usuarioId, setUsuarioId]   = useState('');
-  const [cicloId, setCicloId]       = useState('');
-  const [alertMsg, alertType, showAlert] = useAlert();
+  const [profesores, setProfesores]       = useState([]);
+  const [ciclos, setCiclos]               = useState([]);
+  const [usuariosProfesores, setUsuarios] = useState([]);
+  const [usuarioId, setUsuarioId]         = useState('');
+  const [cicloId, setCicloId]             = useState('');
+  const [alertMsg, alertType, showAlert]  = useAlert();
 
   useEffect(() => {
     cargar();
     getCiclos().then(setCiclos).catch(() => {});
+    getUsuariosProfesores().then(setUsuarios).catch(() => {});
   }, []);
 
   async function cargar() {
@@ -201,8 +214,15 @@ function SeccionProfesores() {
 
       <Card title="Nuevo profesor">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', alignItems: 'flex-end' }}>
-          <Field label="ID de usuario">
-            <input type="number" value={usuarioId} onChange={e => setUsuarioId(e.target.value)} placeholder="3" style={inputStyle} />
+          <Field label="Profesor">
+            <select value={usuarioId} onChange={e => setUsuarioId(e.target.value)} style={inputStyle}>
+              <option value="">Selecciona un profesor...</option>
+              {usuariosProfesores.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.nombre} {u.apellidos || ''} — {u.email}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Ciclo">
             <select value={cicloId} onChange={e => setCicloId(e.target.value)} style={inputStyle}>

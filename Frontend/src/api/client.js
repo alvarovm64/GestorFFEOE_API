@@ -1,4 +1,4 @@
-const API_URL = 'https://gestorffeoeapi-production.up.railway.app';
+const API_URL = process.env.REACT_APP_API_URL || 'https://gestorffeoeapi-production.up.railway.app';
  
 // Recupera el token JWT que guardamos al hacer login
 function getToken() {
@@ -124,3 +124,6 @@ export const importarEmpresas = (archivo) => {
   form.append('archivo', archivo);
   return request('POST', '/api/profesores/importar-empresas', form, true);
 };
+
+export const getUsuariosProfesores = () =>
+  request('GET', '/api/admin/usuarios/profesores');
