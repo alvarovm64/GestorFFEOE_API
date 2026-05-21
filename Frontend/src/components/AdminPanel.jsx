@@ -5,22 +5,22 @@
 //    · Ciclos    → listar, crear, borrar
 //    · Profesores → listar, crear, borrar
 // ─────────────────────────────────────────────────────────────
- 
+
 import { useState, useEffect } from 'react';
 import { Sidebar, Card, Alert, useAlert, Btn } from '../components';
 import {
   getCiclos, createCiclo, deleteCiclo,
   getProfesores, createProfesor, deleteProfesor,
 } from '../api/client';
- 
+
 const NAV_ITEMS = [
   { id: 'ciclos',     label: 'Ciclos',     icon: '📚' },
   { id: 'profesores', label: 'Profesores', icon: '👥' },
 ];
- 
+
 export default function AdminPanel({ onLogout }) {
   const [section, setSection] = useState('ciclos');
- 
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar
@@ -39,19 +39,18 @@ export default function AdminPanel({ onLogout }) {
     </div>
   );
 }
- 
+
 // ─── SECCIÓN CICLOS ──────────────────────────────────────────
- 
+
 function SeccionCiclos() {
-  const [ciclos, setCiclos]   = useState([]);
-  const [nombre, setNombre]   = useState('');
-  const [inicio, setInicio]   = useState('');
-  const [fin, setFin]         = useState('');
+  const [ciclos, setCiclos] = useState([]);
+  const [nombre, setNombre] = useState('');
+  const [inicio, setInicio] = useState('');
+  const [fin, setFin]       = useState('');
   const [alertMsg, alertType, showAlert] = useAlert();
- 
-  // useEffect con array vacío [] = se ejecuta una sola vez al montar el componente
+
   useEffect(() => { cargar(); }, []);
- 
+
   async function cargar() {
     try {
       const data = await getCiclos();
@@ -60,7 +59,7 @@ function SeccionCiclos() {
       showAlert('No se pudieron cargar los ciclos', 'error');
     }
   }
- 
+
   async function handleCrear() {
     if (!nombre || !inicio || !fin) {
       showAlert('Rellena todos los campos', 'error');
@@ -75,7 +74,7 @@ function SeccionCiclos() {
       showAlert(err.message, 'error');
     }
   }
- 
+
   async function handleBorrar(id) {
     if (!window.confirm('¿Seguro que quieres borrar este ciclo?')) return;
     try {
@@ -86,16 +85,16 @@ function SeccionCiclos() {
       showAlert(err.message, 'error');
     }
   }
- 
+
   return (
     <>
       <div style={headerStyle}>
         <h1 style={h1Style}>Ciclos formativos</h1>
         <p style={subtitleStyle}>Crea y gestiona los ciclos del centro</p>
       </div>
- 
+
       <Alert msg={alertMsg} type={alertType} />
- 
+
       <Card title="Nuevo ciclo">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '10px', alignItems: 'flex-end' }}>
           <Field label="Nombre">
@@ -110,7 +109,7 @@ function SeccionCiclos() {
           <Btn onClick={handleCrear} color="#185FA5">+ Añadir</Btn>
         </div>
       </Card>
- 
+
       <Card title="Ciclos registrados" headerAction={<Btn onClick={cargar} color="#185FA5">↺ Actualizar</Btn>}>
         {ciclos.length === 0
           ? <p style={emptyStyle}>No hay ciclos todavía</p>
@@ -124,8 +123,8 @@ function SeccionCiclos() {
                   <tr key={c.id}>
                     <td style={tdStyle}><Badge color="blue">#{c.id}</Badge></td>
                     <td style={tdStyle}>{c.nombre}</td>
-                    <td style={tdStyle}>{c.anio_inicio}</td>
-                    <td style={tdStyle}>{c.anio_fin}</td>
+                    <td style={tdStyle}>{c['año_inicio']}</td>
+                    <td style={tdStyle}>{c['año_fin']}</td>
                     <td style={tdStyle}>
                       <button onClick={() => handleBorrar(c.id)} style={deleteBtnStyle}>🗑 Borrar</button>
                     </td>
@@ -139,17 +138,21 @@ function SeccionCiclos() {
     </>
   );
 }
- 
+
 // ─── SECCIÓN PROFESORES ──────────────────────────────────────
- 
+
 function SeccionProfesores() {
   const [profesores, setProfesores] = useState([]);
+  const [ciclos, setCiclos]         = useState([]);
   const [usuarioId, setUsuarioId]   = useState('');
   const [cicloId, setCicloId]       = useState('');
   const [alertMsg, alertType, showAlert] = useAlert();
- 
-  useEffect(() => { cargar(); }, []);
- 
+
+  useEffect(() => {
+    cargar();
+    getCiclos().then(setCiclos).catch(() => {});
+  }, []);
+
   async function cargar() {
     try {
       const data = await getProfesores();
@@ -158,7 +161,7 @@ function SeccionProfesores() {
       showAlert('No se pudieron cargar los profesores', 'error');
     }
   }
- 
+
   async function handleCrear() {
     if (!usuarioId || !cicloId) { showAlert('Rellena todos los campos', 'error'); return; }
     try {
@@ -170,7 +173,7 @@ function SeccionProfesores() {
       showAlert(err.message, 'error');
     }
   }
- 
+
   async function handleBorrar(id) {
     if (!window.confirm('¿Seguro?')) return;
     try {
@@ -181,42 +184,53 @@ function SeccionProfesores() {
       showAlert(err.message, 'error');
     }
   }
- 
+
+  const nombreCiclo = (id) => {
+    const c = ciclos.find(c => c.id === id);
+    return c ? c.nombre : `#${id}`;
+  };
+
   return (
     <>
       <div style={headerStyle}>
         <h1 style={h1Style}>Profesores</h1>
         <p style={subtitleStyle}>Asigna profesores a ciclos</p>
       </div>
- 
+
       <Alert msg={alertMsg} type={alertType} />
- 
+
       <Card title="Nuevo profesor">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', alignItems: 'flex-end' }}>
           <Field label="ID de usuario">
             <input type="number" value={usuarioId} onChange={e => setUsuarioId(e.target.value)} placeholder="3" style={inputStyle} />
           </Field>
-          <Field label="ID de ciclo">
-            <input type="number" value={cicloId} onChange={e => setCicloId(e.target.value)} placeholder="1" style={inputStyle} />
+          <Field label="Ciclo">
+            <select value={cicloId} onChange={e => setCicloId(e.target.value)} style={inputStyle}>
+              <option value="">Selecciona un ciclo...</option>
+              {ciclos.map(c => (
+                <option key={c.id} value={c.id}>{c.nombre} ({c['año_inicio']}–{c['año_fin']})</option>
+              ))}
+            </select>
           </Field>
           <Btn onClick={handleCrear} color="#185FA5">+ Añadir</Btn>
         </div>
       </Card>
- 
+
       <Card title="Profesores registrados" headerAction={<Btn onClick={cargar} color="#185FA5">↺ Actualizar</Btn>}>
         {profesores.length === 0
           ? <p style={emptyStyle}>No hay profesores todavía</p>
           : (
             <table style={tableStyle}>
               <thead>
-                <tr>{['ID', 'ID Usuario', 'ID Ciclo', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                <tr>{['ID', 'Nombre', 'Email', 'Ciclo', ''].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {profesores.map(p => (
                   <tr key={p.id}>
                     <td style={tdStyle}><Badge color="blue">#{p.id}</Badge></td>
-                    <td style={tdStyle}>{p.usuario_id}</td>
-                    <td style={tdStyle}>{p.ciclo_id}</td>
+                    <td style={tdStyle}>{p.nombre} {p.apellidos || ''}</td>
+                    <td style={tdStyle}>{p.email}</td>
+                    <td style={tdStyle}>{nombreCiclo(p.ciclo_id)}</td>
                     <td style={tdStyle}>
                       <button onClick={() => handleBorrar(p.id)} style={deleteBtnStyle}>🗑 Borrar</button>
                     </td>
@@ -230,9 +244,9 @@ function SeccionProfesores() {
     </>
   );
 }
- 
+
 // ─── HELPERS LOCALES ─────────────────────────────────────────
- 
+
 function Field({ label, children }) {
   return (
     <div>
@@ -241,7 +255,7 @@ function Field({ label, children }) {
     </div>
   );
 }
- 
+
 function Badge({ children, color }) {
   const colors = {
     blue: { bg: '#E6F1FB', text: '#0C447C' },
@@ -253,14 +267,13 @@ function Badge({ children, color }) {
     </span>
   );
 }
- 
-// Estilos compartidos dentro de este archivo
-const headerStyle  = { marginBottom: '1.25rem' };
-const h1Style      = { fontSize: '18px', fontWeight: '500' };
-const subtitleStyle = { fontSize: '13px', color: '#888', marginTop: '2px' };
-const inputStyle   = { width: '100%', padding: '7px 10px', fontSize: '13px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' };
-const tableStyle   = { width: '100%', borderCollapse: 'collapse' };
-const thStyle      = { fontSize: '12px', fontWeight: '500', color: '#888', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #e5e5e5' };
-const tdStyle      = { fontSize: '13px', padding: '10px 0', borderBottom: '1px solid #f0f0f0' };
-const emptyStyle   = { textAlign: 'center', padding: '2rem', color: '#aaa', fontSize: '13px' };
+
+const headerStyle    = { marginBottom: '1.25rem' };
+const h1Style        = { fontSize: '18px', fontWeight: '500' };
+const subtitleStyle  = { fontSize: '13px', color: '#888', marginTop: '2px' };
+const inputStyle     = { width: '100%', padding: '7px 10px', fontSize: '13px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' };
+const tableStyle     = { width: '100%', borderCollapse: 'collapse' };
+const thStyle        = { fontSize: '12px', fontWeight: '500', color: '#888', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #e5e5e5' };
+const tdStyle        = { fontSize: '13px', padding: '10px 0', borderBottom: '1px solid #f0f0f0' };
+const emptyStyle     = { textAlign: 'center', padding: '2rem', color: '#aaa', fontSize: '13px' };
 const deleteBtnStyle = { padding: '5px 10px', background: 'transparent', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' };

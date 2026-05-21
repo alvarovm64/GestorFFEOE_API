@@ -1,4 +1,4 @@
-const API_URL = 'http://alvarovm64:8000';
+const API_URL = 'https://gestorffeoeapi-production.up.railway.app';
  
 // Recupera el token JWT que guardamos al hacer login
 function getToken() {
@@ -51,8 +51,8 @@ export const login = (email, password) =>
 export const getCiclos = () =>
   request('GET', '/api/admin/ciclos');
  
-export const createCiclo = (nombre, anio_inicio, anio_fin) =>
-  request('POST', '/api/admin/ciclos', { nombre, anio_inicio, anio_fin });
+export const createCiclo = (nombre, año_inicio, año_fin) =>
+  request('POST', '/api/admin/ciclos', { nombre, año_inicio, año_fin });
  
 export const deleteCiclo = (id) =>
   request('DELETE', `/api/admin/ciclos/${id}`);
