@@ -6,5 +6,5 @@ class Ciclo(Base):
 
     id          = Column(Integer, primary_key=True, index=True)
     nombre      = Column(String(100), nullable=False)
-    anio_inicio = Column(Integer, nullable=False)
-    anio_fin    = Column(Integer, nullable=False)
+    año_inicio = Column(Integer, nullable=False)
+    año_fin    = Column(Integer, nullable=False)

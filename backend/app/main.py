@@ -3,21 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models import *
 from app.routers import auth, admin, profesores, empresas, alumnos
-from fastapi.middleware.cors import CORSMiddleware
 
- HEAD
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-
-# Crear las tablas en la base de datos
-b620a97afbaf6cfb53eed8faebc54fbf029d3561
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -26,7 +12,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Rutas
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(profesores.router, prefix="/api/profesores", tags=["Profesores"])

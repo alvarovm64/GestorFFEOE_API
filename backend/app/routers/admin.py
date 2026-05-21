@@ -9,14 +9,14 @@ router = APIRouter()
 
 class CicloCreate(BaseModel):
     nombre: str
-    anio_inicio: int
-    anio_fin: int
+    año_inicio: int
+    año_fin: int
 
 class CicloResponse(BaseModel):
     id: int
     nombre: str
-    anio_inicio: int
-    anio_fin: int
+    año_inicio: int
+    año_fin: int
 
     class Config:
         from_attributes = True
