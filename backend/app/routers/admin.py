@@ -4,6 +4,8 @@ from app.database import get_db
 from app.models.ciclo import Ciclo
 from app.dependencies import solo_admin, get_usuario_actual
 from pydantic import BaseModel
+from app.models.usuario import Usuario
+
 
 router = APIRouter()
 
@@ -41,3 +43,8 @@ def eliminar_ciclo(ciclo_id: int, db: Session = Depends(get_db), admin=Depends(s
     db.delete(ciclo)
     db.commit()
     return {"mensaje": "Ciclo eliminado"}
+
+
+@router.get("/usuarios/profesores")
+def listar_usuarios_profesores(db: Session = Depends(get_db), admin=Depends(solo_admin)):
+    return db.query(Usuario).filter(Usuario.rol == "profesor").all()
